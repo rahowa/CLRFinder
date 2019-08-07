@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 
 class LRFinderBase(ABC):
-    """ Base class for rinding best learning rate
+    """ Base class for finding best learning rate
 
         Parameters
         ----------
@@ -16,8 +16,6 @@ class LRFinderBase(ABC):
                 Lower bound of learning rate scheduler
             max_lr: float
                 Upper bound of learin rate scheduler
-            bs: int
-                Batch size
             loader: keras.Sequence, torch.DataLodaer
                 Batch generator
 
@@ -30,15 +28,13 @@ class LRFinderBase(ABC):
             data_len: int
                 Number of batches in dataset
     """
-    def __init__(self, model, min_lr, max_lr, bs, loader, n_epochs):
+    def __init__(self, model, min_lr, max_lr, loader, n_epochs):
         self.model = deepcopy(model)
-        self.max_lr = max_lr
         self.min_lr = min_lr
-        self.bs = bs
+        self.max_lr = max_lr
         self.loader = loader
         self.n_epochs = n_epochs
         self.data_len = len(self.loader)
-        self.device = next(self.model.parameters()).device
         self.lr_s = []
         self.losses = []
 
@@ -72,6 +68,7 @@ class LRFinderBase(ABC):
             Should run self._run_epoch and self._calculate_lr methods inside,
             append learning rate to self.lr_s,
             append loss value to self.losses
+            should call self._smooth_losses at the end
         """
         raise NotImplementedError
 
@@ -93,14 +90,18 @@ class LRFinderBase(ABC):
         plt.title("Loss / learning rate")
         plt.subplot(211)
         plt.plot(self.lr_s)
+        plt.xlabel('iterations')
         plt.grid()
+
         plt.subplot(212)
         plt.plot(self.lr_s, self.smoothed_loss)
         plt.xscale('log')
+        plt.xlabel("learning rate")
         plt.grid()
+
         plt.show()
 
-    def _choose_lr(self):
+    def best_lr(self):
         """ Compute best lower and upper bound learning rate
             for Cyclic scheduler
 
@@ -175,6 +176,5 @@ class BaseScheduler:
                 lr: float
                     Learning rate
         """
-        lr = self.min_lr + (self.max_lr - self.min_lr)
-                         * self.relative(it, self.stepsize)
+        lr = self.min_lr + (self.max_lr - self.min_lr) * self.relative(it, self.stepsize)
         return lr
