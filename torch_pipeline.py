@@ -12,7 +12,7 @@ class PytorchScheduler(BaseScheduler, optim.lr_scheduler._LRScheduler):
 
         Parameters
         ----------
-            min_lr: float
+            min_lr: float   
                 Lower bound of learning rate scheduler
             max_lr: float
                 Upper bound of learin rate scheduler
@@ -21,7 +21,7 @@ class PytorchScheduler(BaseScheduler, optim.lr_scheduler._LRScheduler):
             data_len: int
                 Number of samples in dataset
             n_times:
-                Number of epochs for one cycle
+                Number of epochs for one cycle      
             opeimizer: torch.optim.Optimizer
                 Neural network optimizer
     """
@@ -42,14 +42,40 @@ class PytorchScheduler(BaseScheduler, optim.lr_scheduler._LRScheduler):
 
 
 class LRFinderPytorch(LRFinderBase):
+    """ Class for finding best learning rate for pytorch models
+
+        Parameters
+        ----------
+            model: torch.nn.Module
+                Pytorch model for witch you want to find optimal lr
+            min_lr: float
+                Lower bound of learning rate scheduler
+            max_lr: float
+                Upper bound of learin rate scheduler
+            loader: torch.DataLodaer
+                Batch generator
+
+        Attributes
+        ----------
+            losses: list
+                Loss values at each iteration
+            lr_s: list
+                Learning rate values at each iteration
+            data_len: int
+                Number of batches in dataset
+            device: str
+                Pytorch device
+    """
     def __init__(self, model: nn.Module,
-                 max_lr: float, min_lr: float,
-                 bs: int, loader: DataLoader, n_epochs: int):
-        super().__init__(model, max_lr, min_lr,
-                         bs, loader, n_epochs)
+                 min_lr: float, max_lr: float,
+                 loader: DataLoader, n_epochs: int):
+        self.model = model
+        self.device = next(self.model.parameters()).device
+        super().__init__(model=model, min_lr=min_lr, max_lr=max_lr,
+                         loader=loader, n_epochs=n_epochs)
 
     def _run_epoch(self, optimizer: optim.Optimizer,
-                   scheduler: PytorchScheduler, criterion: nn.Module):
+                   scheduler: optim.lr_scheduler._LRScheduler, criterion: nn.Module):
         lr_step = self.min_lr
         with tqdm(self.loader,
                   postfix=["Current state: ", dict(loss=0, lr=lr_step)]) as t:
@@ -70,19 +96,12 @@ class LRFinderPytorch(LRFinderBase):
                 t.update()
 
     def run(self, criterion: nn.Module, optimizer: optim.Optimizer):
-        optimizer.lr = self.min_lr
-        scheduler = optim.lr_scheduler.LambdaLR(optimizer, self._calculate_lr)
+        for p_group in optimizer.param_groups:
+            p_group['lr'] = self.min_lr
+
+        scheduler = optim.lr_scheduler.LambdaLR(optimizer, [self._calculate_lr])
         self.model.train()
         for ep in range(self.n_epochs):
             print(f'epoch {ep}')
             self._run_epoch(optimizer, scheduler, criterion)
-
-
-if __name__ == '__main__':
-    model = MobileNetV2(2, 1.0)
-    dataset = make_classification(2000)
-
-    data = dataset[0]
-    labels = dataset[1]
-
-    finder = LRFinderPytorch(model, 1.0, 1e-6, )
+        self._smooth_losses()
