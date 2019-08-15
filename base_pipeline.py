@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 import matplotlib.pyplot as plt
-
+from scalers import IterationScalers, CycleScalers
 
 class LRFinderBase(ABC):
     """ Base class for finding best learning rate
@@ -90,13 +90,13 @@ class LRFinderBase(ABC):
         plt.title("Loss / learning rate")
         plt.subplot(211)
         plt.plot(self.lr_s)
-        plt.xlabel('iterations')
+        plt.xlabel('$iterations$')
         plt.grid()
 
         plt.subplot(212)
         plt.plot(self.lr_s, self.smoothed_loss)
         plt.xscale('log')
-        plt.xlabel("learning rate")
+        plt.xlabel("$learning rate$")
         plt.grid()
 
         plt.show()
@@ -119,7 +119,7 @@ class LRFinderBase(ABC):
         return (lower_bound_lr, upper_bound_lr)
 
 
-class BaseScheduler:
+class BaseScheduler(ABC):
     """ Base learning rate scheduler
 
         Parameters
@@ -156,7 +156,7 @@ class BaseScheduler:
                 it: int
                     Current iteration
                 stepsize: int
-                    Number of samples for one cycle
+                    Number of samples for half of the cycle
 
             Returns
             -------
@@ -165,7 +165,12 @@ class BaseScheduler:
         """
         cycle = np.floor(1 + it / (2 * stepsize))
         x = abs(it / stepsize - 2 * cycle + 1)
-        coeff = max(0, (1 - x)) * self.scaler(cycle)
+        if self.scaler.cycle_mode == 'cycle':
+            coeff = max(0, (1 - x)) * self.scaler(cycle)
+        elif self.scaler.cycle_mode == 'iteration':
+            coeff = max(0, (1 - x)) * self.scaler(it)
+        else:
+            raise NotImplementedError
         return coeff
 
     def compute_lr(self, it, stepsize):
