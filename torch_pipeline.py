@@ -1,18 +1,21 @@
 # from copy import deepcopy
 # import torch
 import torch.optim as optim
+from torch.optim import Optimizer
+from torch.optim.lr_scheduler import _LRScheduler
 import torch.nn as nn
 from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
 from base_pipeline import LRFinderBase, BaseScheduler
 
 
-class PytorchScheduler(BaseScheduler, optim.lr_scheduler._LRScheduler):
+class PytorchScheduler(BaseScheduler):
     """ Pytorch specific learning rate scheduler
+        Basicly it's reimplementation of base pytorch scheduler class
 
         Parameters
         ----------
-            min_lr: float   
+            min_lr: float
                 Lower bound of learning rate scheduler
             max_lr: float
                 Upper bound of learin rate scheduler
@@ -21,24 +24,65 @@ class PytorchScheduler(BaseScheduler, optim.lr_scheduler._LRScheduler):
             data_len: int
                 Number of samples in dataset
             n_times:
-                Number of epochs for one cycle      
+                Number of epochs for one cycle
             opeimizer: torch.optim.Optimizer
                 Neural network optimizer
     """
-    def __init__(self, min_lr, max_lr, scaler, data_len, n_times, optimizer):
-        self.optimizer = optimizer
-        self.last_epoch = -1
+
+    def __init__(self, min_lr, max_lr, scaler, data_len, n_times,
+                 optimizer, last_epoch=-1):
+
         super(PytorchScheduler, self).__init__(min_lr=min_lr,
                                                max_lr=max_lr,
                                                scaler=scaler,
                                                data_len=data_len,
-                                               n_times=n_times,
-                                               optimizer=optimizer,
-                                               last_epoch=self.last_epoch)
+                                               n_times=n_times)
+        self.optimizer = optimizer
+        self.last_epoch = last_epoch
+        if not isinstance(optimizer, Optimizer):
+            raise TypeError('{} is not an Optimizer'.format(
+                type(optimizer).__name__))
+        self.optimizer = optimizer
+        if last_epoch == -1:
+            for group in optimizer.param_groups:
+                group.setdefault('initial_lr', group['lr'])
+            last_epoch = 0
+        else:
+            for i, group in enumerate(optimizer.param_groups):
+                if 'initial_lr' not in group:
+                    raise KeyError("param 'initial_lr' is not specified "
+                                   "in param_groups[{}] when resuming an optimizer".format(i))
+        self.base_lrs = list(map(lambda group: group['initial_lr'], optimizer.param_groups))
+        self.step(last_epoch)
 
-        def get_lr(self):
-            lr = self.compute_lr(self.last_epoch, self.stepsize)
-            return lr
+    def state_dict(self):
+        """Returns the state of the scheduler as a :class:`dict`.
+
+        It contains an entry for every variable in self.__dict__ which
+        is not the optimizer.
+        """
+        return {key: value for key, value in self.__dict__.items() if key != 'optimizer'}
+
+    def load_state_dict(self, state_dict):
+        """Loads the schedulers state.
+
+        Arguments
+        ---------
+            state_dict (dict): scheduler state. Should be an object returned
+                from a call to :meth:`state_dict`.
+        """
+        self.__dict__.update(state_dict)
+
+    def step(self, epoch=None):
+        if epoch is None:
+            epoch = self.last_epoch + 1
+        self.last_epoch = epoch
+        for param_group, lr in zip(self.optimizer.param_groups, self.get_lr()):
+            param_group['lr'] = lr
+
+    def get_lr(self):
+        lr = self.compute_lr(self.last_epoch, self.stepsize)
+        return lr
 
 
 class LRFinderPytorch(LRFinderBase):
