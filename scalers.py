@@ -4,6 +4,20 @@ import matplotlib.pyplot as plt
 
 
 class Scaler(object):
+    """ Class to handle creation of new scalers and 
+        check their functionality.
+
+        Parameters
+        ----------
+            model: str
+                Shows how to update scale of learning rate
+
+            function: callable
+                Any that return learning rate at each iteration
+
+            *args, **kwargs
+                Additional parameters of sclaer ('function')
+    """
 
     def __init__(self, mode, function, *args, **kwargs):
         self.mode = mode
@@ -16,6 +30,22 @@ class Scaler(object):
         return self.mode
 
     def plot(self, min_lr=1e-6, max_lr=0.1, stepsize=10, n_iterations=1e3):
+        """ Plot function for easier debugging.
+
+            Parameters
+            ----------
+                min_lr: float
+                    Minimum learning rate for debugging scale function
+
+                max_lr: float
+                    Max learning rate for debugging scale function
+
+                stepsize:
+                    Step (half of full cycle) of changing lr
+
+                n_iterations:
+                    Number of iterations to check
+        """
         iterations = np.arange(n_iterations)
         result = deque(maxlen=len(iterations))
 
@@ -32,6 +62,8 @@ class Scaler(object):
         plt.show()
 
     def __call__(self, x):
+        """ Apply scaler.
+        """
         return self.function(x, self.fun_args, self.fun_kwargs)
 
 
