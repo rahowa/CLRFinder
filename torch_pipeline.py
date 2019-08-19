@@ -77,8 +77,8 @@ class PytorchScheduler(BaseScheduler):
         if epoch is None:
             epoch = self.last_epoch + 1
         self.last_epoch = epoch
-        for param_group, lr in zip(self.optimizer.param_groups, self.get_lr()):
-            param_group['lr'] = lr
+        for param_group in self.optimizer.param_groups:
+            param_group['lr'] = self.get_lr()
 
     def get_lr(self):
         lr = self.compute_lr(self.last_epoch, self.stepsize)

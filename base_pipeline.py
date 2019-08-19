@@ -3,7 +3,6 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 import matplotlib.pyplot as plt
-from scalers import IterationScalers, CycleScalers
 
 class LRFinderBase(ABC):
     """ Base class for finding best learning rate
