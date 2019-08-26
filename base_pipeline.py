@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 class LRFinderBase(ABC):
     """ Base class for finding best learning rate
 

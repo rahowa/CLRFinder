@@ -1,6 +1,8 @@
 import keras
-from base_pipeline import LRFinderBase, BaseScheduler
 import keras.backend as K
+import numpy as np
+
+from base_pipeline import LRFinderBase, BaseScheduler
 
 # TODO: ------------------------>
 #                               |
@@ -10,14 +12,53 @@ import keras.backend as K
 
 
 class LRFinderKeras(keras.callback.Callback, LRFinderBase):
-    def __init__(self, min_lr=1e-5, max_lr=1e-2, steps_per_epoch=None,
+        """ Base class for finding best learning rate
+
+        Parameters
+        ----------
+            model: keras.Model, torch.Module
+                Model for witch you want to find optimal lr
+            min_lr: float
+                Lower bound of learning rate scheduler
+            max_lr: float
+                Upper bound of learin rate scheduler
+            steps_per_epoch: int
+                Show how much iteration should make optimizer every epoch
+
+        Attributes
+        ----------
+            losses: list
+                Loss values at each iteration
+            lr_s: list
+                Learning rate values at each iteration
+            data_len: int
+                Number of batches in dataset
+            iteration: int
+                Number of current iteration
+    """
+
+    def __init__(self, model, min_lr, max_lr, loader, steps_per_epoch=None,
                  epochs=None):
         super().__init__()
-
+        self.model = model
+        self.loader = loader
         self.min_lr = min_lr
         self.max_lr = max_lr
         self.total_iterations = steps_per_epoch * epochs
         self.iteration = 0
+
+    def _run_epoch(self):
+        if isinstance(self.loader, (tuple, list, np.ndarray)):
+            self.model.fit(x=self.loader[0], y=self.loader[1])
+        else:
+            self.model.fit_generator(self.loader)
+    
+
+    def run(self, criterion, optimizer):
+        self.model.compile(optimizer, criterion)
+        self._run_epoch()
+        
+
 
     def clr(self):
         '''Calculate the learning rate.'''
@@ -37,7 +78,7 @@ class LRFinderKeras(keras.callback.Callback, LRFinderBase):
 class KerasScheduler(BaseScheduler, keras.callbacks.Callback):
     def __init__(self, min_lr, max_lr, scaler, data_len, n_times):
         self.it = 0
-        super().__init__(min_lr, max_lr, scaler, data_len, n_times)
+        super().__init__(min_lr, max_lr, scaler, datas_len, n_times)
         self._reset()
 
     def _reset(self, new_base_lr=None, new_max_lr=None,
