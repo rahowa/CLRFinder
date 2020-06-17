@@ -1,13 +1,12 @@
-import torch 
 import torch.nn as nn 
-import torch.nn.functional as F 
 import torch.optim as optim
-from torchvision.models import squeezenet
+import torch.nn.functional as F 
 from torchvision.datasets import MNIST
-from torchvision.transforms import ToTensor, Resize, Compose, ToPILImage
+from torchvision.transforms import ToTensor, Compose
 from torch.utils.data import DataLoader
-from torch_pipeline import LRFinderPytorch, PytorchScheduler
-from scalers import Scaler
+
+from clr_finder.scalers import Scaler
+from clr_finder.torch_pipeline import LRFinderPytorch, PytorchScheduler
 
 
 class TestModel(nn.Module):

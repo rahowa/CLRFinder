@@ -1,12 +1,10 @@
-# from copy import deepcopy
-# import torch
+from tqdm import tqdm
+import torch.nn as nn
 import torch.optim as optim
 from torch.optim import Optimizer
-from torch.optim.lr_scheduler import _LRScheduler
-import torch.nn as nn
-from torch.utils.data import DataLoader, Dataset
-from tqdm import tqdm
-from base_pipeline import LRFinderBase, BaseScheduler
+from torch.utils.data import DataLoader
+
+from clr_finder.base_pipeline import LRFinderBase, BaseScheduler
 
 
 class PytorchScheduler(BaseScheduler):
