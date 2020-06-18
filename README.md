@@ -17,7 +17,7 @@ $ poetry install
 ```
 
 ---
-#Usage 
+# Usage 
 
 ```python
 from clr_finder.scalers import Scaler
@@ -46,7 +46,7 @@ for ep in range(10):
 ```
 
 ---
-#License
+# License
 
 [![License](http://img.shields.io/:license-mit-blue.svg?style=flat-square)](http://badges.mit-license.org)
 
