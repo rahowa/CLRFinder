@@ -4,7 +4,7 @@
 # Install 
 > Clone repo
 ```shell
-$ git clone https://github.com/rahowa/cyclic_learning_rate_finder.git
+$ git clone https://github.com/rahowa/CLRFinder.git
 ```
 > Install poetry for package building
 ```
@@ -16,7 +16,9 @@ $ cd CLRFinder
 $ poetry install
 ```
 
+---
 #Usage 
+
 ```python
 from clr_finder.scalers import Scaler
 from clr_finder.torch_pipeline import LRFinderPytorch, PytorchScheduler
@@ -43,4 +45,9 @@ for ep in range(10):
     print(f"Epooch: {ep}, loss: {loss}, acc: {acc}")
 ```
 
+---
 #License
+
+[![License](http://img.shields.io/:license-mit-blue.svg?style=flat-square)](http://badges.mit-license.org)
+
+- **[MIT license](http://opensource.org/licenses/mit-license.php)**
