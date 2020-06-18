@@ -1,4 +1,4 @@
-# Cyclic learning rate finder
+# CLRFinder
 > This repository contains Pytorch implementations of learning rate finder and cyclic scheduler.
 
 # Install 
@@ -12,11 +12,17 @@ $ pip install poetry
 ```
 > Build and install python package with poetry
 ```shell
+$ cd CLRFinder
 $ poetry install
 ```
 
 #Usage 
 ```python
+from clr_finder.scalers import Scaler
+from clr_finder.torch_pipeline import LRFinderPytorch, PytorchScheduler
+
+...
+
 model = TestModel()
 model.to('cpu')
 criterion = nn.NLLLoss()
