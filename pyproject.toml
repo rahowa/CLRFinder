@@ -1,10 +1,10 @@
 [tool.poetry]
-name = "CLRFinder"
+name = "clr_finder"
 version = "0.1.0"
 description = "Pytorch implementations of learning rate finder and cyclic scheduler."
 authors = ["Valentin Evseenko <roninfromsvf@gmail.com>"]
 license = "MIT"
-readme = README.md
+readme = "README.md
 
 [tool.poetry.dependencies]
 python = "^3.6"
